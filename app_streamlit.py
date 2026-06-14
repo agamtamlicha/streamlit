@@ -258,6 +258,7 @@ else:
         st.title('🪖 Halaman Utama')
         st.write(f"Selamat datang Komandan **{st.session_state['username']}**. Sistem Database MySQL [🟢 AKTIF].")
     with col2:
+        st.write("") 
         if st.button("🚪 Logout (Keluar)", use_container_width=True):
             st.session_state['logged_in'] = False
             if hasattr(st, "query_params"):
@@ -265,59 +266,70 @@ else:
             st.rerun()
             
     # Load Model
-    def load_model():
-        try:
-            model = joblib.load('model_svm.pkl')
-            scaler = joblib.load('scaler.pkl')
-            return model, scaler
-        except Exception as e:
-            st.error("Model SVM gagal dimuat.")
-            st.stop()
-
-    model, scaler = load_model()
+    @st.cache_resource
+    try:
+        model = joblib.load('model_svm.pkl')
+        scaler = joblib.load('scaler.pkl')
+    except Exception as e:
+        st.error("Model SVM gagal dimuat. Harap jalankan file Model Training terlebih dahulu.")
+        st.stop()
 
     # Form Sidebar (Kiri)
     st.sidebar.header('📝 Identitas & Nilai Fisik')
     with st.sidebar.form(key='input_form', clear_on_submit=True):
-        id_prajurit = st.text_input("No. Siswa / ID Prajurit", placeholder="Cth: PR-01")
-        nama_prajurit = st.text_input("Nama Lengkap", placeholder="Cth: Budi Santoso")
+        id_prajurit = st.text_input("No. Siswa / ID Prajurit", placeholder="Ketik kombinasi Huruf/Angka (Cth: PR-01)")
+        nama_prajurit = st.text_input("Nama Lengkap", placeholder="Ketik Tulisan (Cth: Budi Santoso)")
+        
         st.markdown("---")
-        umur = st.number_input('Umur (Tahun)', min_value=17, max_value=60, value=None)
-        tb = st.number_input('Tinggi Badan (cm)', min_value=140, max_value=200, value=None)
-        bb = st.number_input('Berat Badan (kg)', min_value=40, max_value=120, value=None)
-        lari = st.number_input('Lari 12 Menit (m)', value=None)
-        pullup = st.number_input('Pull Up', value=None)
-        situp = st.number_input('Sit Up', value=None)
-        pushup = st.number_input('Push Up', value=None)
-        shuttle = st.number_input('Shuttle Run', value=None)
+        umur = st.number_input('Umur (Tahun)', min_value=17, max_value=60, value=None, placeholder="Cth: 25")
+        tb = st.number_input('Tinggi Badan (cm)', min_value=140, max_value=200, value=None, placeholder="Cth: 175")
+        bb = st.number_input('Berat Badan (kg)', min_value=40, max_value=120, value=None, placeholder="Cth: 65")
+        lari = st.number_input('Lari 12 Menit (Jarak Meter)', value=None, step=10.0, placeholder="Cth: 2400")
+        pullup = st.number_input('Pull Up (Jumlah)', value=None, placeholder="Cth: 12")
+        situp = st.number_input('Sit Up (Jumlah)', value=None, placeholder="Cth: 40")
+        pushup = st.number_input('Push Up (Jumlah)', value=None, placeholder="Cth: 35")
+        shuttle = st.number_input('Shuttle Run (Detik)', value=None, placeholder="Cth: 16.5")
+
+        # Eksekusi (Tombol Utama) - Evaluasi di awal sebelum penggambaran tab/grafik
         submit_btn = st.form_submit_button('🧠 Analisa & Simpan ke Database', use_container_width=True, type='primary')
 
-    # Proses Input
+    # Inisialisasi status penyimpanan
+    submit_success = False
+    error_msg = None
+    success_msg = None
+    info_msg = None
+    hasil_akhir = None
+
     if submit_btn:
         if not id_prajurit or not nama_prajurit:
-            st.error("⚠️ Lengkapi No. Siswa/ID dan Nama!")
+            st.sidebar.error("⚠️ Lengkapi No. Siswa/ID dan Nama Prajurit terlebih dahulu!")
         elif None in [umur, tb, bb, lari, pullup, situp, pushup, shuttle]:
-            st.error("⚠️ Lengkapi semua data fisik!")
+            st.sidebar.error("⚠️ Lengkapi kedelapan angka Fisik sebelum menekan tombol!")
         else:
+            # Hitung SVM dengan DataFrame untuk menghindari warning feature names
             feature_names = ['umur', 'tb', 'bb', 'lari', 'pullup', 'situp', 'pushup', 'shuttle']
             data_fisik = pd.DataFrame([[umur, tb, bb, lari, pullup, situp, pushup, shuttle]], columns=feature_names)
             data_scaled = scaler.transform(data_fisik)
             hasil_akhir = model.predict(data_scaled)[0]
             
+            # Simpan ke MySQL
             try:
                 cursor = conn.cursor()
                 cursor.execute("SELECT id FROM riwayat_prediksi WHERE id = %s", (id_prajurit,))
                 if cursor.fetchone():
-                    st.error(f"⚠️ ID **{id_prajurit}** sudah ada.")
+                    error_msg = f"⚠️ Gagal Disimpan! ID Prajurit **{id_prajurit}** sudah pernah dimasukkan sebelumnya."
                 else:
-                    query = "INSERT INTO riwayat_prediksi (id, nama, umur, tb, bb, lari, pullup, situp, pushup, shuttle, hasil) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                    query = """
+                        INSERT INTO riwayat_prediksi (id, nama, umur, tb, bb, lari, pullup, situp, pushup, shuttle, hasil)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """
                     values = (id_prajurit, nama_prajurit, umur, tb, bb, lari, pullup, situp, pushup, shuttle, hasil_akhir)
                     cursor.execute(query, values)
                     conn.commit()
-                    st.success("✅ Data berhasil disimpan!")
+                    submit_success = True
                 cursor.close()
             except Exception as e:
-                st.error(f"Error Database: {e}")
+                error_msg = f"Terjadi kesalahan saat injeksi ke SQL Database: {e}"
 
     # Menampilkan Notifikasi Hasil Input di Atas Area Utama
     if error_msg:
