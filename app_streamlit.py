@@ -320,21 +320,21 @@ if submit_btn:
             
        # Simpan ke MySQL
         try:
-                cursor = conn.cursor()
-                cursor.execute("SELECT id FROM riwayat_prediksi WHERE id = %s", (id_prajurit,))
-                if cursor.fetchone():
-                    error_msg = f"⚠️ Gagal Disimpan! ID Prajurit **{id_prajurit}** sudah pernah dimasukkan sebelumnya."
-                else:
-                    query = """
-                        INSERT INTO riwayat_prediksi (id, nama, umur, tb, bb, lari, pullup, situp, pushup, shuttle, hasil)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM riwayat_prediksi WHERE id = %s", (id_prajurit,))
+            if cursor.fetchone():
+                error_msg = f"⚠️ Gagal Disimpan! ID Prajurit **{id_prajurit}** sudah pernah dimasukkan sebelumnya."
+            else:
+                query = """
+                    INSERT INTO riwayat_prediksi (id, nama, umur, tb, bb, lari, pullup, situp, pushup, shuttle, hasil)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
                     # Baris di bawah ini harus sejajar dengan 'query ='
-                    values = (id_prajurit, nama_prajurit, umur, tb, bb, lari, pullup, situp, pushup, shuttle, hasil_akhir)
-                    cursor.execute(query, values)
-                    conn.commit()
-                    submit_success = True
-                cursor.close()
+                values = (id_prajurit, nama_prajurit, umur, tb, bb, lari, pullup, situp, pushup, shuttle, hasil_akhir)
+                cursor.execute(query, values)
+                conn.commit()
+                submit_success = True
+            cursor.close()
             except Exception as e:
                 # Baris ini harus sejajar dengan 'try:'
                 error_msg = f"Terjadi kesalahan saat injeksi ke SQL Database: {e}"
