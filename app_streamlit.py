@@ -281,8 +281,8 @@ def load_model():
 model, scaler = load_model()
 
     # Form Sidebar (Kiri)
-    st.sidebar.header('📝 Identitas & Nilai Fisik')
-    with st.sidebar.form(key='input_form', clear_on_submit=True):
+st.sidebar.header('📝 Identitas & Nilai Fisik')
+with st.sidebar.form(key='input_form', clear_on_submit=True):
         id_prajurit = st.text_input("No. Siswa / ID Prajurit", placeholder="Ketik kombinasi Huruf/Angka (Cth: PR-01)")
         nama_prajurit = st.text_input("Nama Lengkap", placeholder="Ketik Tulisan (Cth: Budi Santoso)")
         
