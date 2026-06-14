@@ -266,13 +266,17 @@ else:
             st.rerun()
             
     # Load Model
-    @st.cache_resource
-    try:
-        model = joblib.load('model_svm.pkl')
-        scaler = joblib.load('scaler.pkl')
-    except Exception as e:
-        st.error("Model SVM gagal dimuat. Harap jalankan file Model Training terlebih dahulu.")
-        st.stop()
+@st.cache_resource
+    def load_model():
+        try:
+            model = joblib.load('model_svm.pkl')
+            scaler = joblib.load('scaler.pkl')
+            return model, scaler
+        except Exception as e:
+            st.error("Model SVM gagal dimuat. Harap jalankan file Model Training terlebih dahulu.")
+            st.stop()
+
+    model, scaler = load_model()
 
     # Form Sidebar (Kiri)
     st.sidebar.header('📝 Identitas & Nilai Fisik')
