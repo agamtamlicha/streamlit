@@ -337,7 +337,7 @@ if submit_btn:
             cursor.close()
         except Exception as e:
                 # Baris ini harus sejajar dengan 'try:'
-        error_msg = f"Terjadi kesalahan saat injeksi ke SQL Database: {e}"
+            error_msg = f"Terjadi kesalahan saat injeksi ke SQL Database: {e}"
 
     # Menampilkan Notifikasi Hasil Input di Atas Area Utama
     if error_msg:
