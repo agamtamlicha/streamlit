@@ -27,11 +27,6 @@ hide_menu_style = """
         <style>
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
-        header {visibility: hidden;}
-        /* Menyembunyikan tombol deploy/manage app jika muncul */
-        [data-testid="stToolbar"] {visibility: hidden !important;}
-        [data-testid="stDecoration"] {visibility: hidden !important;}
-        [data-testid="stStatusWidget"] {visibility: hidden !important;}
         /* Menghilangkan padding atas agar tidak ada celah kosong bekas header */
         .main .block-container {
             padding-top: 1rem;
@@ -92,7 +87,7 @@ st.markdown("""
 
 
 # ================= DATABASE INIT =====================
-@st.cache_resource
+# Hapus @st.cache_resource untuk menghindari MySQL Connection timeout & error concurrent.
 def get_db_connection():
     # 1. Coba koneksi menggunakan st.secrets (jika tersedia)
     try:
@@ -240,6 +235,7 @@ if not st.session_state['logged_in']:
                     cursor.execute("SELECT * FROM users WHERE username=%s AND password=%s", (username, password))
                     user = cursor.fetchone()
                     cursor.close()
+                    conn.close()
                     
                     if user:
                         st.session_state['logged_in'] = True
@@ -271,12 +267,10 @@ else:
         return joblib.load('model_svm.pkl'), joblib.load('scaler.pkl')
 
     try:
-        model = joblib.load('model_svm.pkl')
-        scaler = joblib.load('scaler.pkl')
+        model, scaler = load_model()
     except Exception as e:
         st.error("Model SVM gagal dimuat. Harap jalankan file Model Training terlebih dahulu.")
         st.stop()
-
     # Form Sidebar (Kiri)
     st.sidebar.header('📝 Identitas & Nilai Fisik')
     with st.sidebar.form(key='input_form', clear_on_submit=True):
@@ -342,7 +336,8 @@ else:
             'BS': 'Baik Sekali',
             'B': 'Baik',
             'C': 'Cukup',
-            'Kurang': 'Kurang'
+            'Kurang': 'Kurang',
+            'TL': 'Tidak Lulus'
         }
         hasil_readable = db_mapping.get(hasil_akhir, hasil_akhir)
         st.success(f'### Kategori Kelulusan Ditetapkan (Tingkat Prediksi): **{hasil_readable}**')
@@ -363,7 +358,8 @@ else:
             'BS': 'Baik Sekali',
             'B': 'Baik',
             'C': 'Cukup',
-            'Kurang': 'Kurang'
+            'Kurang': 'Kurang',
+            'TL': 'Tidak Lulus'
         }
         try:
             cursor = conn.cursor()
@@ -381,15 +377,16 @@ else:
         except Exception as e:
             kc = {'Baik Sekali': 2, 'Baik': 10, 'Cukup': 8, 'Kurang': 3} # Data cadangan jika query gagal
             
-        K_ORDER = ['Baik Sekali', 'Baik', 'Cukup', 'Kurang']
-        K_CLR = {'Baik Sekali': '#1abc9c', 'Baik': '#2ecc71', 'Cukup': '#3498db', 'Kurang': '#e74c3c'}
+        K_ORDER = ['Baik Sekali', 'Baik', 'Cukup', 'Kurang', 'Tidak Lulus']
+        K_CLR = {'Baik Sekali': '#1abc9c', 'Baik': '#2ecc71', 'Cukup': '#3498db', 'Kurang': '#e74c3c', 'Tidak Lulus': '#c0392b'}
         
         # Tampilan KPI Card Ringkas
-        col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
+        col_kpi1, col_kpi2, col_kpi3, col_kpi4, col_kpi5 = st.columns(5)
         col_kpi1.metric("🏅 Baik Sekali", f"{kc.get('Baik Sekali', 0)} Orang")
         col_kpi2.metric("🟢 Baik", f"{kc.get('Baik', 0)} Orang")
         col_kpi3.metric("🔵 Cukup", f"{kc.get('Cukup', 0)} Orang")
         col_kpi4.metric("🔴 Kurang", f"{kc.get('Kurang', 0)} Orang")
+        col_kpi5.metric("⚫ Tidak Lulus", f"{kc.get('Tidak Lulus', 0)} Orang")
         
         st.write("")
             
@@ -441,3 +438,7 @@ else:
                     st.rerun()
         except Exception as e:
             st.write(f"Gangguan pembacaan tabel MySQL: {e}")
+            
+    # Menutup koneksi database di akhir eksekusi untuk menghindari memory leak
+    if conn:
+        conn.close()
