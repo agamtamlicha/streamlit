@@ -336,13 +336,11 @@ else:
             'BS': 'Baik Sekali',
             'B': 'Baik',
             'C': 'Cukup',
-            'Kurang': 'Kurang',
-            'TL': 'Tidak Lulus'
         }
         hasil_readable = db_mapping.get(hasil_akhir, hasil_akhir)
         st.success(f'### Kategori Kelulusan Ditetapkan (Tingkat Prediksi): **{hasil_readable}**')
         st.info(f"💾 Data **{nama_prajurit}** ({id_prajurit}) berhasil diamankan ke dalam Bunker Database MySQL.")
-        if hasil_akhir in ["TL", "Kurang"]:
+        if hasil_akhir == 'C':
             st.snow()
         else:
             st.balloons()
@@ -358,8 +356,6 @@ else:
             'BS': 'Baik Sekali',
             'B': 'Baik',
             'C': 'Cukup',
-            'Kurang': 'Kurang',
-            'TL': 'Tidak Lulus'
         }
         try:
             cursor = conn.cursor()
@@ -369,24 +365,22 @@ else:
             cursor.close()
             
             # Populasi counts ke label representatif
-            kc = {'Baik Sekali': 0, 'Baik': 0, 'Cukup': 0, 'Kurang': 0}
+            kc = {'Baik Sekali': 0, 'Baik': 0, 'Cukup': 0}
             for _, row in df_dist.iterrows():
                 raw_val = row['Hasil_Prediksi']
                 mapped_val = db_mapping.get(raw_val, raw_val)
                 kc[mapped_val] = kc.get(mapped_val, 0) + row['jumlah']
         except Exception as e:
-            kc = {'Baik Sekali': 2, 'Baik': 10, 'Cukup': 8, 'Kurang': 3} # Data cadangan jika query gagal
+            kc = {'Baik Sekali': 2, 'Baik': 10, 'Cukup': 8} # Data cadangan jika query gagal
             
-        K_ORDER = ['Baik Sekali', 'Baik', 'Cukup', 'Kurang', 'Tidak Lulus']
-        K_CLR = {'Baik Sekali': '#1abc9c', 'Baik': '#2ecc71', 'Cukup': '#3498db', 'Kurang': '#e74c3c', 'Tidak Lulus': '#c0392b'}
+        K_ORDER = ['Baik Sekali', 'Baik', 'Cukup']
+        K_CLR = {'Baik Sekali': '#1abc9c', 'Baik': '#2ecc71', 'Cukup': '#3498db'}
         
         # Tampilan KPI Card Ringkas
         col_kpi1, col_kpi2, col_kpi3, col_kpi4, col_kpi5 = st.columns(5)
         col_kpi1.metric("🏅 Baik Sekali", f"{kc.get('Baik Sekali', 0)} Orang")
         col_kpi2.metric("🟢 Baik", f"{kc.get('Baik', 0)} Orang")
         col_kpi3.metric("🔵 Cukup", f"{kc.get('Cukup', 0)} Orang")
-        col_kpi4.metric("🔴 Kurang", f"{kc.get('Kurang', 0)} Orang")
-        col_kpi5.metric("⚫ Tidak Lulus", f"{kc.get('Tidak Lulus', 0)} Orang")
         
         st.write("")
             
