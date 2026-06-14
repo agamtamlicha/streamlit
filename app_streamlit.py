@@ -300,11 +300,11 @@ with st.sidebar.form(key='input_form', clear_on_submit=True):
         submit_btn = st.form_submit_button('🧠 Analisa & Simpan ke Database', use_container_width=True, type='primary')
 
     # Inisialisasi status penyimpanan
-    submit_success = False
-    error_msg = None
-    success_msg = None
-    info_msg = None
-    hasil_akhir = None
+submit_success = False
+error_msg = None
+success_msg = None
+info_msg = None
+hasil_akhir = None
 
     if submit_btn:
         if not id_prajurit or not nama_prajurit:
