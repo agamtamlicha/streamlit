@@ -319,23 +319,23 @@ if submit_btn:
         hasil_akhir = model.predict(data_scaled)[0]
             
             # Simpan ke MySQL
-        try:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id FROM riwayat_prediksi WHERE id = %s", (id_prajurit,))
-            if cursor.fetchone():
-                error_msg = f"⚠️ Gagal Disimpan! ID Prajurit **{id_prajurit}** sudah pernah dimasukkan sebelumnya."
-            else:
-                 query = """
-                    INSERT INTO riwayat_prediksi (id, nama, umur, tb, bb, lari, pullup, situp, pushup, shuttle, hasil)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """
-                values = (id_prajurit, nama_prajurit, umur, tb, bb, lari, pullup, situp, pushup, shuttle, hasil_akhir)
-                cursor.execute(query, values)
-                conn.commit()
-                submit_success = True
-            cursor.close()
-        except Exception as e:
-            error_msg = f"Terjadi kesalahan saat injeksi ke SQL Database: {e}"
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM riwayat_prediksi WHERE id = %s", (id_prajurit,))
+        if cursor.fetchone():
+            error_msg = f"⚠️ Gagal Disimpan! ID Prajurit **{id_prajurit}** sudah pernah dimasukkan sebelumnya."
+        else:
+                query = """
+                INSERT INTO riwayat_prediksi (id, nama, umur, tb, bb, lari, pullup, situp, pushup, shuttle, hasil)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+            values = (id_prajurit, nama_prajurit, umur, tb, bb, lari, pullup, situp, pushup, shuttle, hasil_akhir)
+            cursor.execute(query, values)
+            conn.commit()
+            submit_success = True
+        cursor.close()
+    except Exception as e:
+        error_msg = f"Terjadi kesalahan saat injeksi ke SQL Database: {e}"
 
     # Menampilkan Notifikasi Hasil Input di Atas Area Utama
     if error_msg:
