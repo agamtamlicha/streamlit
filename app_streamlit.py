@@ -266,17 +266,19 @@ else:
             st.rerun()
             
     # Load Model
-@st.cache_resource
-    def load_model():
-        try:
-            model = joblib.load('model_svm.pkl')
-            scaler = joblib.load('scaler.pkl')
-            return model, scaler
-        except Exception as e:
-            st.error("Model SVM gagal dimuat. Harap jalankan file Model Training terlebih dahulu.")
-            st.stop()
+# Pastikan tidak ada spasi di depan 'def' ini
+def load_model():
+    # Isi di bawah ini harus menjorok 4 spasi ke kanan
+    try:
+        model = joblib.load('model_svm.pkl')
+        scaler = joblib.load('scaler.pkl')
+        return model, scaler
+    except Exception as e:
+        st.error("Model SVM gagal dimuat.")
+        st.stop()
 
-    model, scaler = load_model()
+# Baris ini juga tidak boleh ada spasi di depannya
+model, scaler = load_model()
 
     # Form Sidebar (Kiri)
     st.sidebar.header('📝 Identitas & Nilai Fisik')
