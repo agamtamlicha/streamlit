@@ -319,7 +319,7 @@ if submit_btn:
         hasil_akhir = model.predict(data_scaled)[0]
             
        # Simpan ke MySQL
-            try:
+        try:
                 cursor = conn.cursor()
                 cursor.execute("SELECT id FROM riwayat_prediksi WHERE id = %s", (id_prajurit,))
                 if cursor.fetchone():
