@@ -267,6 +267,9 @@ else:
             
     # Load Model
     @st.cache_resource
+    def load_model():
+        return joblib.load('model_svm.pkl'), joblib.load('scaler.pkl')
+
     try:
         model = joblib.load('model_svm.pkl')
         scaler = joblib.load('scaler.pkl')
