@@ -252,7 +252,7 @@ else:
     col1, col2 = st.columns([8, 2])
     with col1:
         st.title('🪖 Halaman Utama')
-        st.write(f"Selamat datang Komandan **{st.session_state['username']}**. Sistem Database MySQL [🟢 AKTIF].")
+        st.write(f"Selamat datang Komandan **{st.session_state['username']}**. Dashboard")
     with col2:
         st.write("") 
         if st.button("🚪 Logout (Keluar)", use_container_width=True):
@@ -339,7 +339,7 @@ else:
         }
         hasil_readable = db_mapping.get(hasil_akhir, hasil_akhir)
         st.success(f'### Kategori Kelulusan Ditetapkan (Tingkat Prediksi): **{hasil_readable}**')
-        st.info(f"💾 Data **{nama_prajurit}** ({id_prajurit}) berhasil diamankan ke dalam Bunker Database MySQL.")
+        st.info(f"💾 Data **{nama_prajurit}** ({id_prajurit}) berhasil ditambahkan ke dalam Database.")
         if hasil_akhir == 'C':
             st.snow()
         else:
